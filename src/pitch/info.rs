@@ -5,7 +5,18 @@ const A4_FREQUENCY: f64 = 440.0;
 // Sharp symbol: ♯
 // Flat symbol: ♭
 const NOTE_LITERALS: [&str; 12] = [
-    "A", "B♭", "B", "C", "C♯", "D", "E♭", "E", "F", "F♯", "G", "G♯",
+    "A",
+    "A♯/B♭",
+    "B",
+    "C",
+    "C♯/D♭",
+    "D",
+    "D♯/E♭",
+    "E",
+    "F",
+    "F♯/G♭",
+    "G",
+    "G♯/A♭",
 ];
 const NUM_NOTES: i32 = NOTE_LITERALS.len() as i32;
 
@@ -99,7 +110,7 @@ mod tests {
         assert_eq!(pitch.note.octave, 6);
 
         let pitch = get_pitch_info(830.0);
-        assert_eq!(pitch.note.literal, "A♭");
+        assert_eq!(pitch.note.literal, "G♯");
         assert_eq!(pitch.note.octave, 5);
 
         let pitch = get_pitch_info(460.0);

@@ -68,7 +68,16 @@ impl Ui {
         if cent.abs() < 0.1 {
             pitch_info_note = pitch_info_note.on_green().to_string();
         }
-        writeln!(self.text_to_print, "\n{}\n", pitch_info_note)?;
+
+        let pitch_hint = if cent > 0.1 {
+            "↓"
+        } else if cent < -0.1 {
+            "↑"
+        } else {
+            ""
+        };
+
+        writeln!(self.text_to_print, "\n{} {}\n", pitch_info_note, pitch_hint)?;
 
         if cent < 0.0 {
             writeln!(
@@ -82,20 +91,19 @@ impl Ui {
     }
 
     pub fn render(&mut self, frequency: f32) -> io::Result<()> {
-        let mut stdout = io::stdout();
-
         self.write_text_to_print(frequency)
             .expect("Should be able to write to string");
 
-        stdout
+        let text_to_print_owned = mem::replace(
+            &mut self.text_to_print,
+            String::with_capacity(TEXT_TO_PRINT_CAPACITY),
+        );
+
+        io::stdout()
             .queue(Clear(ClearType::All))?
             .queue(MoveTo(0, 0))?
-            .queue(Print(mem::replace(
-                &mut self.text_to_print,
-                String::with_capacity(TEXT_TO_PRINT_CAPACITY),
-            )))?;
-
-        stdout.flush()?;
+            .queue(Print(text_to_print_owned))?
+            .flush()?;
 
         Ok(())
     }

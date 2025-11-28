@@ -50,5 +50,7 @@ fn main() {
 
     stream.play().expect("Should be able to play input stream");
 
+    println!("Listening for a note...");
+
     thread::park();
 }
