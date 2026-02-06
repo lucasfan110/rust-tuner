@@ -1,12 +1,11 @@
 use std::{
     fmt::{self, Write as FmtWrite},
     io::{self, Write},
-    mem,
 };
 
 use crossterm::{
     QueueableCommand,
-    cursor::MoveTo,
+    cursor::{MoveTo, RestorePosition, SavePosition},
     style::{Color, Print, Stylize},
     terminal::{Clear, ClearType},
 };
@@ -14,6 +13,7 @@ use crossterm::{
 use crate::pitch::info::get_pitch_info;
 
 const TEXT_TO_PRINT_CAPACITY: usize = 128;
+const IN_TUNE_THRESHOLD: f64 = 0.1;
 
 fn get_color_from_cent(cent: f64) -> Color {
     let percentage = 1.0 - cent.abs() * 2.0;
@@ -57,7 +57,7 @@ impl Ui {
         if cent > 0.0 {
             writeln!(
                 self.text_to_print,
-                "{}",
+                "{}                   ",
                 format!("{:+.1}", cent * 100.0).with(color)
             )?;
         } else {
@@ -65,13 +65,13 @@ impl Ui {
         }
 
         let mut pitch_info_note = pitch_info.note.to_string();
-        if cent.abs() < 0.1 {
+        if cent.abs() < IN_TUNE_THRESHOLD {
             pitch_info_note = pitch_info_note.on_green().to_string();
         }
 
-        let pitch_hint = if cent > 0.1 {
+        let pitch_hint = if cent > IN_TUNE_THRESHOLD {
             "↓"
-        } else if cent < -0.1 {
+        } else if cent < -IN_TUNE_THRESHOLD {
             "↑"
         } else {
             ""
@@ -94,16 +94,15 @@ impl Ui {
         self.write_text_to_print(frequency)
             .expect("Should be able to write to string");
 
-        let text_to_print_owned = mem::replace(
-            &mut self.text_to_print,
-            String::with_capacity(TEXT_TO_PRINT_CAPACITY),
-        );
-
         io::stdout()
+            .queue(SavePosition)?
             .queue(Clear(ClearType::All))?
             .queue(MoveTo(0, 0))?
-            .queue(Print(text_to_print_owned))?
+            .queue(Print(self.text_to_print.as_str()))?
+            .queue(RestorePosition)?
             .flush()?;
+
+        self.text_to_print.clear();
 
         Ok(())
     }

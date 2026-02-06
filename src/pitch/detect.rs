@@ -6,6 +6,7 @@ use pitch_detection::{
 
 const TUNER_POWER_THRESHOLD: f32 = 0.1;
 const TUNER_CLARITY_THRESHOLD: f32 = 0.8;
+const AUDIO_BUFFER_SIZE: usize = 1024;
 
 fn downmix_audio(buffer: &mut Vec<f32>, audio_data: &[f32], num_channels: usize) {
     buffer.extend(
@@ -37,7 +38,7 @@ pub struct PitchFrequencyDetector {
 impl PitchFrequencyDetector {
     pub fn new(input_device_config: StreamConfig) -> Self {
         Self {
-            downmixed_audio_buffer: Vec::with_capacity(1024),
+            downmixed_audio_buffer: Vec::with_capacity(AUDIO_BUFFER_SIZE),
             input_device_config,
         }
     }
@@ -51,7 +52,7 @@ impl PitchFrequencyDetector {
 
         let pitch = detect_pitch(
             &self.downmixed_audio_buffer,
-            self.input_device_config.sample_rate.0 as usize,
+            self.input_device_config.sample_rate as usize,
         )
         .map(|p| p.frequency);
 
